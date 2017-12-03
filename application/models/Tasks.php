@@ -5,11 +5,18 @@
  * Date: 10/12/2017
  * Time: 1:20 PM
  */
+
+/**
+ * Modified to use REST client to get port data from our server.
+ */
+define('REST_SERVER', 'http://backend.local');  // the REST server host
+define('REST_PORT', $_SERVER['SERVER_PORT']);   // the port you are running the server on
+
 class Tasks extends XML_Model {
 
     public function __construct()
     {
-        parent::__construct(APPPATH . '../data/tasks.xml', 'id');
+        parent::__construct();
     }
 
     function getCategorizedTasks()
