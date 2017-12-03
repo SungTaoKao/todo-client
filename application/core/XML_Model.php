@@ -22,6 +22,8 @@ class XML_Model extends Memory_Model
 	{
 		parent::__construct();
 
+		$this->load->library(['curl', 'format', 'rest']);
+
 		// guess at persistent name if not specified
 		if ($origin == null)
 			$this->_origin = get_class($this);
@@ -46,29 +48,14 @@ class XML_Model extends Memory_Model
 	protected function load()
     {
         //---------------------
-        $xml = simplexml_load_file($this->_origin) or die("Error: Cannot create object");
+        // load our data from the REST backend
+        $this->rest->initialize(array('server' => REST_SERVER));
+        $this->rest->option(CURLOPT_PORT, REST_PORT);
+        $this->_data =  $this->rest->get('job');
 
-        //echo $xml->taskitem->children() . "<br>";
-        foreach($xml->taskitem->children() as $key => $value) {
-            $this->_fields[] = (string)$key;
-            //echo $key . "<br>";
-        }
-
-        foreach($xml->children() as $task) {
-            $record = new stdClass();
-
-            $record->{"id"} = (int) $task->id;
-            $record->{"task"} = (string) $task->task;
-            $record->{"priority"} = (int) $task->priority;
-            $record->{"size"} = (int) $task->size;
-            $record->{"group"} = (int) $task->group;
-            $record->{"deadline"} = (int) $task->deadline;
-            $record->{"status"} = (int) $task->status;
-            $record->{"flag"} = (int) $task->flag;
-
-            $key = $record->{$this->_keyfield};
-            $this->_data[$key] = $record;
-        }
+		// rebuild the field names from the first object
+		$one = array_values((array) $this->_data);
+		$this->_fields = array_keys((array)$one[0]);
 
         // --------------------
 		// rebuild the keys table
@@ -81,53 +68,6 @@ class XML_Model extends Memory_Model
 	 */
 	protected function store()
 	{
-		// rebuild the keys table
-		$this->reindex();
-    
-       // $xml = simplexml_load_file($this->_origin) or die("Error: Cannot create object");
-        
-        $dom = new DOMDocument('1.0', 'UTF-8');
-        
-        $root = $dom->appendChild($dom->createElement('todo'));
-        
-        foreach($this->_data as $key => $record){
-            $taskItem = $root->appendChild($dom->createElement('taskitem'));
-            
-            $id = $taskItem->appendChild($dom->createElement('id'));
-            $id->appendChild($dom->createTextNode($record->{"id"}));
-            
-            $task = $taskItem->appendChild($dom->createElement('task'));
-            $task->appendChild($dom->createTextNode($record->{"task"}));
-            
-            $priority = $taskItem->appendChild($dom->createElement('priority'));
-            $priority->appendChild($dom->createTextNode($record->{"priority"}));
-            
-            $size = $taskItem->appendChild($dom->createElement('size'));
-            $size->appendChild($dom->createTextNode($record->{"size"}));
-            
-            $group = $taskItem->appendChild($dom->createElement('group'));
-            $group->appendChild($dom->createTextNode($record->{"group"}));
-            
-            $deadline = $taskItem->appendChild($dom->createElement('deadline'));
-            $deadline->appendChild($dom->createTextNode($record->{"deadline"}));
-            
-            $status = $taskItem->appendChild($dom->createElement('status'));
-            $status->appendChild($dom->createTextNode($record->{"status"}));
-            
-            $flag = $taskItem->appendChild($dom->createElement('flag'));
-            $flag->appendChild($dom->createTextNode($record->{"flag"}));
-        }
-        
-        $dom->save($this->_origin);
-		/**
-		if (($handle = fopen($this->_origin, "w")) !== FALSE)
-		{
-			fputcsv($handle, $this->_fields);
-			foreach ($this->_data as $key => $record)
-				fputcsv($handle, array_values((array) $record));
-			fclose($handle);
-		}
-		**/
 	}
 
 }
