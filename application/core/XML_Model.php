@@ -83,7 +83,43 @@ class XML_Model extends Memory_Model
 	{
 		// rebuild the keys table
 		$this->reindex();
-		//---------------------
+    
+       // $xml = simplexml_load_file($this->_origin) or die("Error: Cannot create object");
+        
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        
+        $root = $dom->appendChild($dom->createElement('todo'));
+        
+        foreach($this->_data as $key => $record){
+            $taskItem = $root->appendChild($dom->createElement('taskitem'));
+            
+            $id = $taskItem->appendChild($dom->createElement('id'));
+            $id->appendChild($dom->createTextNode($record->{"id"}));
+            
+            $task = $taskItem->appendChild($dom->createElement('task'));
+            $task->appendChild($dom->createTextNode($record->{"task"}));
+            
+            $priority = $taskItem->appendChild($dom->createElement('priority'));
+            $priority->appendChild($dom->createTextNode($record->{"priority"}));
+            
+            $size = $taskItem->appendChild($dom->createElement('size'));
+            $size->appendChild($dom->createTextNode($record->{"size"}));
+            
+            $group = $taskItem->appendChild($dom->createElement('group'));
+            $group->appendChild($dom->createTextNode($record->{"group"}));
+            
+            $deadline = $taskItem->appendChild($dom->createElement('deadline'));
+            $deadline->appendChild($dom->createTextNode($record->{"deadline"}));
+            
+            $status = $taskItem->appendChild($dom->createElement('status'));
+            $status->appendChild($dom->createTextNode($record->{"status"}));
+            
+            $flag = $taskItem->appendChild($dom->createElement('flag'));
+            $flag->appendChild($dom->createTextNode($record->{"flag"}));
+        }
+        
+        $dom->save($this->_origin);
+		/**
 		if (($handle = fopen($this->_origin, "w")) !== FALSE)
 		{
 			fputcsv($handle, $this->_fields);
@@ -91,7 +127,7 @@ class XML_Model extends Memory_Model
 				fputcsv($handle, array_values((array) $record));
 			fclose($handle);
 		}
-		// --------------------
+		**/
 	}
 
 }
